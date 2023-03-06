@@ -1,0 +1,126 @@
+---
+title: "Data 607 Project 2 Dataset 1: Bob Ross"
+author: "Susanna Wong"
+date: "2023-03-05"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+---
+
+# Introduction
+
+For Project 2 Dataset 1, I chose to analyze "Bob Ross Painting" provided by Taha. As suggest by Taha in the Week 5 discussion forum, we should find which color did Bob Ross used most often.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load CSV into R
+
+Load the csv file into R.
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyr)
+library(dplyr)
+library(DT)
+raw_data <- read.csv('https://raw.githubusercontent.com/suswong/DATA-607-Project-2/main/Gasoline_Retail_Prices_Weekly_Average_by_Region__Beginning_2007.csv')
+datatable(raw_data)
+```
+
+# Tidy Data
+
+There are columns that contain URLs, which we do need to analyze the data. Those columns will be removed. We do not necessarily need the colors and color_hex column since there are individual columns for each colors used in each season and episode. Those columns can be removed.
+
+## Create a new table without the columns with the URL
+
+```{r}
+#colnames(raw_data)
+
+df1 <- raw_data[c('X','painting_index', 'painting_title','season','episode','num_colors')]
+colorscol <- raw_data[,11:28]
+Tidytable <- cbind(df1,colorscol)
+datatable(Tidytable)
+```
+
+## From Wide Format to Long Format
+
+Pivot the table so that each color is in a row.
+
+```{r}
+#colnames(raw_data)
+library(ggplot2)
+long_table <- Tidytable %>% 
+  pivot_longer(cols = !c('X','painting_index', 'painting_title','season','episode','num_colors'), names_to = "color", values_to = "count" )
+datatable(long_table)
+```
+
+# Data Analysis
+
+## What Color Did Bob Ross Use Most Often Overall?
+
+### Calculate the total number of times Bob Ross used a color
+
+Filter our the zeroes and count the number of times Bob Ross used each color. Create a new column and calculate the percentage of the number of times Bob Ross used a color.
+
+```{r}
+frequent_color <- long_table %>% 
+  filter(count == 1)
+frequent_color <- frequent_color  %>% 
+  count(color) %>% 
+  mutate(percentage = (n / nrow(frequent_color))*100)
+datatable(frequent_color)
+```
+
+Below is a table of the colors Bob used most often from greatest to least by percentage. The top three colors Bob Ross used most often are "Titanium White", "Alizarin Crimson", and "Van Dyke Brown". The top three colors Bob Ross used the least are "Indian Red" , "Liquid Black", and "Liquid Clear". In fact, he only used "Indian Red" once in all season.
+
+```{r}
+ggplot(frequent_color , aes(x = reorder(color, percentage), y = percentage)) + 
+  geom_bar(stat = 'identity', color= "blue" , fill = 'lightblue') + 
+  coord_flip() + ggtitle("Colors Used Most Often by Percentage") + 
+  ylab("Percentage of Color Used") + 
+  xlab("Color") 
+```
+
+## What color did Bob Ross used most often by season?
+
+```{r}
+newtable <- cbind(df1$season,colorscol)
+count_color <- newtable %>% 
+  group_by(df1$season) %>% 
+  summarise(across(everything(), sum))
+```
+
+
+```{r}
+totalcolors <- sum(long_table$num_colors)
+season_color <- long_table 
+season_color <- season_color[,-2] #remove the 2nd column of long_table
+season_color <- season_color[,-2] #remove the 3rd column of long_table
+
+season_color <- season_color %>%   
+  group_by(season, color) %>% 
+  mutate(count= sum(count)) 
+
+library("data.table")
+final_season_color<- season_color[order(season_color$count, decreasing = TRUE),] 
+final_season_color <- data.table(final_season_color, key = "season")
+final_season_color <- final_season_color[ , head(.SD, 3), by = season]
+final_season_color <- final_season_color[,-2]
+final_season_color <- final_season_color[,-2]
+final_season_color <- final_season_color[,-2]
+
+datatable(final_season_color)
+
+# p = ggplot(season_color, aes(x=reorder(color, count), y=count))+
+#   geom_bar(stat='identity', fill="forest green")+
+#   facet_wrap(~season, scales = "free", ncol = 2) +coord_flip()
+# p
+
+#ggsave("file_name.jpg", plot = p, width = 49, height = 49, units = "in")
+
+```
+
+# Conclusion
+
+The top three colors Bob Ross used most often are "Titanium White", "Alizarin Crimson", and "Van Dyke Brown". The top three colors Bob Ross used the least are "Indian Red" , "Liquid Black", and "Liquid Clear". In fact, he only used "Indian Red" once in all season.

@@ -1,0 +1,299 @@
+---
+title: "DATA 607 Project 2 Dataset 2"
+author: "Susanna Wong"
+date: "2023-03-04"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+For Project 2 Dataset 2, I chose to analyze "MTA Daily Ridership" provided by John. As suggest by John in the Week 5 discussion forum, we should compare the MTA daily riderships during Covid and prior to Covid 19.
+
+# Load CSV file into R
+
+```{r,  message=FALSE, warning=FALSE}
+library(dplyr)
+#library(tidyverse)
+library(tidyr)
+library(DT)
+raw_data <- read.csv('https://raw.githubusercontent.com/suswong/DATA-607-Project-2/main/MTA_Daily_Ridership_Data__Beginning_2020.csv')
+raw_data$Date <- as.Date(raw_data$Date,
+                        format = "%m/%d/%Y")
+datatable(raw_data)
+```
+
+# Tidy data
+
+```{r,  message=FALSE, warning=FALSE}
+newtable <- raw_data
+colnames(newtable) <- c("Date", "Subway", "Subway Percentage", "Bus", "Bus Percentage", "Lirr", "Lirr Percentage","Metro", "Metro Percentage","Access", "Access Percentage","Bridge", "Bridge Percentage","SIRailway", "SIRailway Percentage")
+Tidydata <- newtable[c('Date', 'Subway', 'Bus', 'Lirr','Metro',"Access", 'Bridge', 'SIRailway')]
+
+long_data <- Tidydata %>% 
+  pivot_longer(cols = c('Subway', 'Bus', 'Lirr','Metro',"Access", 'Bridge', 'SIRailway'))
+colnames(long_data) <-c('Date', 'Transportation','Total_Ridership')
+datatable(long_data)
+```
+
+# From Wide Format to Long Format
+
+```{r,  message=FALSE, warning=FALSE}
+newtable <- raw_data
+colnames(newtable) <- c("Date", "Subway", "Subway Percentage", "Bus", "Bus Percentage", "Lirr", "Lirr Percentage","Metro", "Metro Percentage","Access", "Access Percentage","Bridge", "Bridge Percentage","SIRailway", "SIRailway Percentage")
+Tidydata <- newtable[c('Date', 'Subway', 'Bus', 'Lirr','Metro',"Access", 'Bridge', 'SIRailway')]
+
+long_data <- Tidydata %>% 
+  pivot_longer(cols = c('Subway', 'Bus', 'Lirr','Metro',"Access", 'Bridge', 'SIRailway'))
+colnames(long_data) <-c('Date', 'Transportation','Total_Ridership')
+datatable(long_data)
+```
+
+# Total Estimated Ridership During the Pandemic for Each Transportation line
+
+I used 'geom_line' at first. However, it was very hard to visualize the graph as most of the lines overlapped. I used the following [link](https://www.statology.org/ggplot-trendline/) to help me draw the trends.
+
+Between 2020 and mid 2020, there was a time where more people took the bus than MTA. This was around the start of the pandemic. Otherwise, people most often took the train compared to other transportation. During the pandemic, the number of people that took the MTA decreased between early 2020 to mid 2020. However, the the number of people that took the MTA increased overtime.
+
+It is also very interesting to see between 2020 and mid 2020, there was decrease in all transportation by bridge and tunnel. The number of people that took the Staten Island railway and Metro North stayed almost constant throughout the time.
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+ggplot(long_data, aes(x = Date, y = Total_Ridership, colour = Transportation)) +
+  geom_smooth() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+# PrePandemic Total Estimated Riderships v. Pandemic Total Estimated Riderships
+
+Shoshana suggested to analyze and compare the number of ridership before and after the pandemic. In the following, I calculated the total estimated ridership prior to the Covid-19 pandemic for each transportation using the provided percentage. I assumed the calculation of the provided percentage was calculated by dividing the Total Estimated Riderships after the pandemic by the total estimated ridership prior to the Covid-19 pandemic.
+
+## Subway
+
+Create a new datatable that only contain the "Subway" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+subway <- raw_data%>%
+  select(contains("Subway"))
+subway <- cbind(raw_data$Date,subway)
+colnames(subway) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+subway$Total.Estimated.Ridership.PrePandemic <- (subway$Total.Estimated.Ridership)/(subway$PrePandemic.Percentage)
+datatable(subway)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_subway <- subway %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_subway) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_subway, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+## Bus
+
+Create a new datatable that only contain the "Bus" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+bus <- raw_data%>%
+  select(contains("Bus"))
+bus <- cbind(raw_data$Date,bus)
+colnames(bus) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+bus$Total.Estimated.Ridership.PrePandemic <- (bus$Total.Estimated.Ridership)/(bus$PrePandemic.Percentage)
+datatable(bus)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_bus <- bus %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_bus) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_bus, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+## Bridge
+
+Create a new datatable that only contain the "Bridge" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+Bridge <- raw_data%>%
+  select(contains("Bridge"))
+Bridge <- cbind(raw_data$Date,Bridge)
+colnames(Bridge) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+Bridge$Total.Estimated.Ridership.PrePandemic <- (Bridge$Total.Estimated.Ridership)/(Bridge$PrePandemic.Percentage)
+datatable(Bridge)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_Bridge <- Bridge %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_Bridge) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_Bridge, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+## Metro
+
+Create a new datatable that only contain the "Metro" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+Metro <- raw_data%>%
+  select(contains("Metro"))
+Metro <- cbind(raw_data$Date,Metro)
+colnames(Metro) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+Metro$Total.Estimated.Ridership.PrePandemic <- (Metro$Total.Estimated.Ridership)/(Metro$PrePandemic.Percentage)
+datatable(Metro)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_Metro <- Metro %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_Metro) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_Metro, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+## Access
+
+Create a new datatable that only contain the "Access" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+Access <- raw_data%>%
+  select(contains("Access"))
+Access <- cbind(raw_data$Date,Access)
+colnames(Access) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+Access$Total.Estimated.Ridership.PrePandemic <- (Access$Total.Estimated.Ridership)/(Access$PrePandemic.Percentage)
+datatable(Access)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_Access <- Access %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_Access) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_Access, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+## Bridge
+
+Create a new datatable that only contain the "Bridge" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+Bridge <- raw_data%>%
+  select(contains("Bridge"))
+Bridge <- cbind(raw_data$Date,Bridge)
+colnames(Bridge) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+Bridge$Total.Estimated.Ridership.PrePandemic <- (Bridge$Total.Estimated.Ridership)/(Bridge$PrePandemic.Percentage)
+datatable(Bridge)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_Bridge <- Bridge %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_Bridge) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+By mid 2021, the number of riderships is almost the same as the number of riderships prior the pandemic. 
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_Bridge, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+## SIRailway
+
+Create a new datatable that only contain the "SIRailway" in the column.
+
+```{r,  message=FALSE, warning=FALSE}
+SIRailway <- raw_data[,14:15]
+SIRailway <- cbind(raw_data$Date,SIRailway)
+colnames(SIRailway) <- c("Date", "Total.Estimated.Ridership", "PrePandemic.Percentage")
+```
+
+### Calculate the total estimated ridership prior to the Covid-19 pandemic
+
+The dataset does not provide data of the total estimated ridership prior to the Covid-19 pandemic. The total estimated ridership prior to the Covid-19 pandemic is calculated by the total estimated ridership/Percentage of Comparable Pre-Pandemic Day
+
+```{r,  message=FALSE, warning=FALSE}
+SIRailway$Total.Estimated.Ridership.PrePandemic <- (SIRailway$Total.Estimated.Ridership)/(SIRailway$PrePandemic.Percentage)
+datatable(SIRailway)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+long_data_SIRailway <- SIRailway %>% 
+  pivot_longer(cols = c('Total.Estimated.Ridership', 'Total.Estimated.Ridership.PrePandemic'))
+colnames(long_data_SIRailway) <- c("Date", "PrePandemic.Percentage", "Ridership", "Total.Estimated.Ridership")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+ggplot(long_data_SIRailway, aes(x = Date, y = Total.Estimated.Ridership, colour = Ridership)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+```
+
+# Conclusion
+
+Between 2020 and mid 2020, there was a time where more people took the bus than MTA. This was around the start of the pandemic. Otherwise, there were more riders that took the train compared to other transportation. During the pandemic, the number of people that took the MTA decreased between early 2020 to mid 2020. However, the the number of people that took the MTA increased overtime.
+
+It is also very interesting to see between 2020 and mid 2020, there was a decrease in usage of all transportation except for those who took bridge and tunnel. 
+
+By 2023, the number of riderships is almost the same the number of ridership prior to the pandemic for those who took Access ride and the Bridge and Tunnel.

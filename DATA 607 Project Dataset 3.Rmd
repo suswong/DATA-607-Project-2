@@ -1,0 +1,34 @@
+---
+title: "DATA 607 dataset 3"
+author: "Susanna Wong"
+date: "2023-03-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load CSV into R
+
+Load the csv file into R.
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyr)
+library(dplyr)
+library(DT)
+raw_data <- read.csv('https://raw.githubusercontent.com/suswong/DATA-607-Project-2/main/Gasoline_Retail_Prices_Weekly_Average_by_Region__Beginning_2007.csv')
+datatable(raw_data)
+```
+
+## From Wide Format to Long Format
+
+Pivot the table so that each color is in a row.
+
+```{r}
+colnames(raw_data)
+library(ggplot2)
+long_table <- raw_data %>% 
+  pivot_longer(cols = !c('Date') )
+datatable(long_table)
+```
