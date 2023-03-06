@@ -51,9 +51,59 @@ datatable(long_table)
 ## Data Analysis
 
 ### Create a line graph to view the trend or compare the prices of gasoline for each region.
-Overall, we can see most region follows the same trend. Overall, there is a increase in average weekly prices  from mid 2007 to around 2012 for all region.  There is a decrease in average weekly prices from around 2012 to aorunf 2017. The average weekly prices increase from 2017 to present. 
+Overall, we can see most region follows the same trend. Overall, there is a increase in average weekly prices  from mid 2007 to around 2012 for all region.  There is a decrease in average weekly prices from around 2012 to around 2017. The average weekly prices increase from 2017 to present. 
 ```{r}
 library(ggplot2)
 ggplot(long_table, aes(x = Date, y = average_price, colour = region)) +
   geom_smooth() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
+
 ```
+
+# Compare the trend with the crude oil prices
+
+# Annual US Crude Oil Prices from 1900
+
+The US crude oil annual prices from 1900 can be found here: https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=pet&s=f000000__3&f=a
+
+# Load CSV into R
+
+The website provided a XLS file of the crude oil prices. The file was save as a csv file. 
+```{r}
+crude_oil_raw_data <- read.csv('https://raw.githubusercontent.com/suswong/DATA-607-Project-2/main/crude%20oil%20prices%20from%20eia.gov.csv')
+```
+
+# Tidy Data
+
+Remove the first two rows and rename the columns. 
+```{r}
+colnames(crude_oil_raw_data) <- c("Year", "Price")
+crude_oil <- crude_oil_raw_data
+tidy_crude_oil <- crude_oil [-1,]
+tidy_crude_oil <- tidy_crude_oil [-1,]
+```
+
+# Filter out crude oil prices prior to 2007
+```{r}
+filtered_crude_oil <- tidy_crude_oil[as.numeric(tidy_crude_oil$Year) >2006,] 
+datatable(filtered_crude_oil)
+
+# filtered_crude_oil <- tidy_crude_oil %>% 
+#   filter(Year >2006)
+# datatable(filtered_crude_oil)
+```
+
+# Plot the crude oil
+
+The annual US crude oil prices have similar trends as the average weekly gasoline prices in NY.
+```{r}
+ggplot(filtered_crude_oil, aes(x = Year, y = Price, group=1)) +
+  geom_line()+ ggtitle("Annual Crude Oil Price from 2007 to 2022") + 
+  xlab("Year") + 
+  ylab("US Crude Oil Price (Dollars/Barrel)") 
+ggplot(long_table, aes(x = Date, y = average_price, colour = region)) +
+  geom_line() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) + ggtitle("Average Weekly Gasoline Prices in Different NY Region from 2007 to Present") + 
+  ylab("Average Weekly Gasoline Prices") + 
+  xlab("Year") 
+```
+
+
