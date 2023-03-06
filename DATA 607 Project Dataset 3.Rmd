@@ -18,7 +18,16 @@ library(tidyr)
 library(dplyr)
 library(DT)
 raw_data <- read.csv('https://raw.githubusercontent.com/suswong/DATA-607-Project-2/main/Gasoline_Retail_Prices_Weekly_Average_by_Region__Beginning_2007.csv')
+raw_data$Date <- as.Date(raw_data$Date,
+                        format = "%m/%d/%Y")
 datatable(raw_data)
+```
+
+## Tidy the data
+```{r}
+newtable <- raw_data
+colnames(newtable) <- c("Date", "New.York.State", "Albany","Batavia","Binghamton","Buffalo", "Dutchess", "Elmira,","Glens.Falls","Ithaca", "Kingston","Nassau","New.York.City","Rochester", "Syracuse","Utica","Watertown","White.Plains")
+
 ```
 
 ## From Wide Format to Long Format
@@ -28,7 +37,23 @@ Pivot the table so that each color is in a row.
 ```{r}
 colnames(raw_data)
 library(ggplot2)
-long_table <- raw_data %>% 
-  pivot_longer(cols = !c('Date') )
+long_table <- newtable %>% 
+  pivot_longer(cols = !c('Date'),names_to = "region", values_to = "average_price" )
 datatable(long_table)
+```
+```{r}
+colnames(raw_data)
+library(ggplot2)
+long_table <- newtable %>% 
+  pivot_longer(cols = !c('Date'), names_to = "region", values_to = "average_price" )
+datatable(long_table)
+```
+## Data Analysis
+
+### Create a line graph to view the trend or compare the prices of gasoline for each region.
+Overall, we can see most region follows the same trend. Overall, there is a increase in average weekly prices  from mid 2007 to around 2012 for all region.  There is a decrease in average weekly prices from around 2012 to aorunf 2017. The average weekly prices increase from 2017 to present. 
+```{r}
+library(ggplot2)
+ggplot(long_table, aes(x = Date, y = average_price, colour = region)) +
+  geom_smooth() + scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) 
 ```
